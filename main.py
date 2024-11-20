@@ -7,7 +7,6 @@ from models import Config
 
 logger = logging.getLogger(__name__)
 
-VALID_LOGGING_STRINGS = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
 
 def main():
 
@@ -20,9 +19,6 @@ def main():
     
     # init logging
     level_string = config.log_level
-    if level_string not in VALID_LOGGING_STRINGS:
-        logger.error(f"Invalid log level: {level_string}")
-        return
     logging.basicConfig(level=getattr(logging, level_string))
     logging.getLogger('urllib3').setLevel(logging.ERROR)
     
