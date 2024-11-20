@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 from models import JobListing
 
@@ -13,3 +14,51 @@ def check_python_job(job_listing: JobListing):
     job_string = str(job_listing.to_tuple())
     if 'python' in job_string.lower():
         logger.info(f"Python job found: {job_listing}")
+
+def telegram_alert(job_listing: JobListing):
+    """Send a Telegram alert when a new job is found."""
+    # ----
+    # lazy telegram integration
+    import requests
+    from dotenv import load_dotenv, find_dotenv
+    import os
+    load_dotenv(find_dotenv())
+    KEY = os.getenv("TELEGRAM_KEY")
+    ID = os.getenv("TELEGRAM_CHAT_ID")
+    message = f"New Job Alert:\nTitle: {job_listing.job_title}\nCompany: {job_listing.company_name}\nURL: {job_listing.url}"
+    url = f"https://api.telegram.org/bot{KEY}/sendMessage"
+    payload = {"chat_id": ID, "text": message}
+    try:
+        response = requests.post(url, json=payload)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+        logger.info("Telegram alert sent successfully.")
+    except requests.RequestException as e:
+        logger.error(f"Failed to send Telegram alert: {e}")
+    # ----
+
+def telegram_alert_on_contains_words(job_listing: JobListing):
+    """Check if job listing contains any of the words and then alert"""
+    # check job listing
+    WORDS = ["python", "developer", "engineer", "software", "django", "flask", "fastapi", "backend", "fullstack"]
+    job_string = str(job_listing.to_tuple())
+    if any(word in job_string.lower() for word in WORDS):
+            logger.info(f"Job found with keywords: {job_listing}")
+            # ----
+            # lazy telegram integration
+            import requests
+            from dotenv import load_dotenv, find_dotenv
+            import os
+            load_dotenv(find_dotenv())
+            KEY = os.getenv("TELEGRAM_KEY")
+            ID = os.getenv("TELEGRAM_CHAT_ID")
+            message = f"New Job Alert:\nTitle: {job_listing.job_title}\nCompany: {job_listing.company_name}\nURL: {job_listing.url}"
+            url = f"https://api.telegram.org/bot{KEY}/sendMessage"
+            payload = {"chat_id": ID, "text": message}
+            try:
+                response = requests.post(url, json=payload)
+                response.raise_for_status()  # Raise an exception for HTTP errors
+                logger.info("Telegram alert sent successfully.")
+            except requests.RequestException as e:
+                logger.error(f"Failed to send Telegram alert: {e}")
+            # ----
+    
