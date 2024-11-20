@@ -1,0 +1,7 @@
+{
+    "db_path": "./jobs_db.sqlite",
+    "scan_interval_minutes": 5,
+    "overwrite_db": true,
+    "new_job_callback": "check_python_job",
+    "log_level": "INFO"
+}
