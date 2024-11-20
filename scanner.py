@@ -98,30 +98,36 @@ class Scanner:
 
         return job_listing
     
-    def run(self):
-        """Run the scanner"""
-        logger.debug(f"Scanner starting")
-        while True:
-            page_has_contents = True
-            # iterate pages until no more jobs are found
-            page_number = 1
-            while page_has_contents:
-                page_url = self.make_index_page_url(page_number)
-                page = self.get_page(page_url)
-                if page is None:
-                    break
-                job_urls = self.extract_job_urls(page)
-                if len(job_urls) == 0:
-                    page_has_contents = False
-                else:
-                    for job_url in job_urls:
-                        job_listing = self.fetch_job_listing(job_url)
-                        is_new_job_listing = self.db.insert_job(job_listing)
-                        if is_new_job_listing:
-                            self.new_job_callback(job_listing)
-                page_number += 1
-            logger.info(f"Sleeping for {self.config.scan_interval_minutes} minutes")
-            time.sleep(int(self.config.scan_interval_minutes) * 60)
+    def run_once(self):
+        """Run through all pages once"""
+        page_number = 1
+        page_has_contents = True
+        while page_has_contents:
+            page_url = self.make_index_page_url(page_number)
+            page = self.get_page(page_url)
+            if page is None:
+                break
+            job_urls = self.extract_job_urls(page)
+            if len(job_urls) == 0:
+                page_has_contents = False
+            else:
+                for job_url in job_urls:
+                    job_listing = self.fetch_job_listing(job_url)
+                    is_new_job_listing = self.db.insert_job(job_listing)
+                    if is_new_job_listing:
+                        self.new_job_callback(job_listing)
+            page_number += 1
     
+    def run_forever(self):
+        """Run the scanner indefinitely"""
+        logger.debug(f"Scanner starting")
+        try:
+            while True:
+                self.run_once()
+                logger.info(f"Sleeping for {self.config.scan_interval_minutes} minutes")
+                time.sleep(int(self.config.scan_interval_minutes) * 60)
+        except KeyboardInterrupt:
+            logger.info("Scanner interrupted, stopping")
+            return
 
     
